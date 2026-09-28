@@ -54,6 +54,22 @@ app.get('/health', (_req, res) => {
   });
 });
 
+function roleHome(role) {
+  if (role === 'admin') return '/supervisor/dashboard';
+  return `/${role}/dashboard`;
+}
+
+app.get(['/', '/login'], (req, res) => {
+  attachUser(req, res, () => {
+    if (req.user) return res.redirect(roleHome(req.user.role));
+    res.locals.user = null;
+    res.locals.flash = getFlash(req, res);
+    res.locals.h = viewHelpers;
+    res.locals.googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+    res.render('index', { openSignin: req.path === '/login' });
+  });
+});
+
 app.use((req, res, next) => {
   const configErrors = getRequiredEnvErrors();
   if (configErrors.length) {
@@ -138,24 +154,7 @@ app.use(async (req, res, next) => {
   }
 });
 
-function roleHome(role) {
-  if (role === 'admin') return '/supervisor/dashboard';
-  return `/${role}/dashboard`;
-}
-
-// ── Landing ──────────────────────────────────────────────────────────
-
-app.get('/', (req, res) => {
-  if (req.user) return res.redirect(roleHome(req.user.role));
-  res.render('index', { openSignin: false });
-});
-
 // ── Auth ─────────────────────────────────────────────────────────────
-
-app.get('/login', (req, res) => {
-  if (req.user) return res.redirect(roleHome(req.user.role));
-  res.render('index', { openSignin: true });
-});
 
 app.post('/login', async (req, res) => {
   const email = (req.body.email || '').trim();
