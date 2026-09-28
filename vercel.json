@@ -4,8 +4,5 @@
     "api/index.js": {
       "includeFiles": "views/**/*"
     }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
-  ]
+  }
 }
