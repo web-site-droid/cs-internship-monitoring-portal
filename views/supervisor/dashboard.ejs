@@ -1,0 +1,30 @@
+<%- include('../partials/layout-top') %>
+
+<div class="stats-grid stats-grid-aligned">
+  <div class="stat-card tone-amber" data-href="/supervisor/validate" tabindex="0" role="link">
+    <span class="stat-label">Pending Hour Logs</span>
+    <strong class="stat-value"><%= pendingHours %></strong>
+    <small>Awaiting validation</small>
+  </div>
+  <div class="stat-card tone-amber" data-href="/supervisor/validate" tabindex="0" role="link">
+    <span class="stat-label">Pending Tasks</span>
+    <strong class="stat-value"><%= pendingTasks %></strong>
+    <small>Awaiting your review</small>
+  </div>
+  <div class="stat-card tone-green" data-href="#registered-students" tabindex="0" role="link">
+    <span class="stat-label">Total Students</span>
+    <strong class="stat-value"><%= studentCount %></strong>
+    <small>Active internship accounts</small>
+  </div>
+</div>
+
+<% if (user.role === 'admin') { %>
+<div class="dashboard-grid">
+  <%- include('partials/all-accounts-panel') %>
+</div>
+<% } %>
+<%- include('partials/registered-students-panel', { students, bscsGroup }) %>
+<%- include('partials/feedback-panel', { bscsGroup, feedbackTodayByStudent }) %>
+
+<%- include('../partials/layout-bottom') %>
+<script src="/assets/js/supervisor-students.js" defer></script>

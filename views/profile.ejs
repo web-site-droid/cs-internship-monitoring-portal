@@ -1,0 +1,123 @@
+<%- include('partials/layout-top') %>
+
+<div class="profile-page">
+  <div class="profile-card">
+    <div class="profile-photo-wrap">
+      <% if (profile.profile_photo) { %>
+        <img src="<%= profile.profile_photo %>" alt="Profile photo" class="profile-photo-lg" id="profilePhotoPreview">
+      <% } else { %>
+        <div class="profile-avatar-lg" id="profileInitialFallback"><%= profile.name.charAt(0).toUpperCase() %></div>
+        <img src="" alt="Profile photo preview" class="profile-photo-lg hidden" id="profilePhotoPreview">
+      <% } %>
+    </div>
+    <h2><%= profile.name %></h2>
+    <% if (profile.created_at) { %>
+      <p class="profile-since">Member since <%= h.formatDate(profile.created_at) %></p>
+    <% } %>
+  </div>
+
+  <div class="profile-main">
+    <div class="card profile-section">
+      <p class="profile-section-desc">Upload a photo and update your contact details.</p>
+      <form method="post" action="/profile" enctype="multipart/form-data" class="profile-form" id="profileForm" data-noConfirm>
+        <input type="hidden" name="action" value="update">
+
+        <div class="form-group">
+          <label for="profilePhoto">Profile Photo</label>
+          <input type="file" id="profilePhoto" name="photo" accept="image/jpeg,image/png,image/webp">
+          <small class="field-hint">JPG, PNG, or WEBP · Max 2 MB</small>
+        </div>
+
+        <% if (profile.role === 'student') { %>
+          <%- include('partials/personal-info-fields', { profile, fieldPrefix: 'profile', studentOnly: true }) %>
+          <div class="form-group" style="margin-top:8px">
+            <label for="profileStudentNumber">Student ID / Number</label>
+            <input type="text" id="profileStudentNumber" name="student_number" maxlength="50" placeholder="e.g. 2024-00123" value="<%= profile.student_number || '' %>">
+          </div>
+        <% } else { %>
+          <%- include('partials/personal-info-fields', { profile, fieldPrefix: 'profile', hideStudentFields: true, studentOnly: false }) %>
+        <% } %>
+
+        <% const addr = h.parseAddressFields(profile.address); %>
+
+        <h4 class="profile-subsection-title">Address</h4>
+        <div class="form-group">
+          <label for="profileAddressStreet">House No. / Street</label>
+          <input type="text" id="profileAddressStreet" name="address_street" maxlength="120" placeholder="e.g. 123 Main Street" value="<%= addr.street %>">
+        </div>
+        <div class="dashboard-grid">
+          <div class="form-group">
+            <label for="profileAddressBarangay">Barangay</label>
+            <input type="text" id="profileAddressBarangay" name="address_barangay" maxlength="80" placeholder="e.g. San Roque" value="<%= addr.barangay %>">
+          </div>
+          <div class="form-group">
+            <label for="profileAddressCity">City / Municipality</label>
+            <input type="text" id="profileAddressCity" name="address_city" maxlength="80" placeholder="e.g. Lucena City" value="<%= addr.city %>">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="profileAddressProvince">Province</label>
+          <input type="text" id="profileAddressProvince" name="address_province" maxlength="80" placeholder="e.g. Quezon" value="<%= addr.province %>">
+        </div>
+
+        <% if (profile.role === 'student') { %>
+        <h4 class="profile-subsection-title">Emergency Contact</h4>
+        <div class="dashboard-grid">
+          <div class="form-group">
+            <label for="profileEmergencyName">Contact Person</label>
+            <input type="text" id="profileEmergencyName" name="emergency_contact" maxlength="100" placeholder="Parent or guardian name" value="<%= profile.emergency_contact || '' %>">
+          </div>
+          <div class="form-group">
+            <label for="profileEmergencyPhone">Emergency Contact #</label>
+            <input type="tel" id="profileEmergencyPhone" name="emergency_phone" maxlength="20" placeholder="e.g. 0918 000 0000" value="<%= profile.emergency_phone || '' %>">
+          </div>
+        </div>
+        <% } %>
+
+        <button type="submit" class="btn btn-primary" data-loading-text="Saving…">Save Profile</button>
+      </form>
+    </div>
+
+    <% if (profile.role === 'admin') { %>
+    <div class="card profile-section">
+      <h3 class="section-title">Change Password</h3>
+      <p class="profile-section-desc">Only an administrator can change account passwords.</p>
+      <form method="post" action="/profile" class="profile-form" data-noConfirm>
+        <input type="hidden" name="action" value="password">
+        <div class="form-group">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" name="current_password" required autocomplete="current-password">
+        </div>
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" name="new_password" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input type="password" id="confirmPassword" name="confirm_password" required minlength="6" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-secondary" data-loading-text="Updating…">Update Password</button>
+      </form>
+    </div>
+    <% } else { %>
+    <div class="card profile-section">
+      <h3 class="section-title">Password</h3>
+      <p class="profile-section-desc">Your password is set by an administrator. Ask an administrator if you need it changed.</p>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+document.getElementById('profilePhoto')?.addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const preview = document.getElementById('profilePhotoPreview');
+  const fallback = document.getElementById('profileInitialFallback');
+  preview.src = URL.createObjectURL(file);
+  preview.classList.remove('hidden');
+  if (fallback) fallback.classList.add('hidden');
+});
+</script>
+
+<%- include('partials/layout-bottom') %>

@@ -1,0 +1,78 @@
+<%- include('../partials/layout-top') %>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>Register Organization</h2>
+        <small>Add a school partner or company for internship placement.</small>
+      </div>
+    </div>
+    <form method="post" action="/school/register" data-noConfirm>
+      <input type="hidden" name="action" value="register">
+      <div class="form-group">
+        <label>Organization Name</label>
+        <input type="text" name="name" required placeholder="Company or institution name">
+      </div>
+      <div class="form-group">
+        <label>Contact Person</label>
+        <input type="text" name="contact_person" placeholder="Supervisor or HR contact">
+      </div>
+      <div class="form-group">
+        <label>Contact Email</label>
+        <input type="email" name="contact_email" placeholder="contact@example.com">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea name="address" rows="3" data-maxlength="300" placeholder="Office address or location"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" data-loading-text="Saving…">Register Organization</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>Registered Organizations</h2>
+        <small>Approve partners to confirm their registration.</small>
+      </div>
+    </div>
+    <% if (!organizations.length) { %>
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No organizations yet</p>
+        <small>Register your first partner using the form.</small>
+      </div>
+    <% } else { %>
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr><th>Name</th><th>Contact</th><th>Email</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        <% organizations.forEach(function(org) { %>
+          <tr>
+            <td><%= org.name %></td>
+            <td><%= org.contact_person %></td>
+            <td><%= org.contact_email %></td>
+            <td><%- h.renderStatusBadge(org.approved ? 'approved' : 'pending') %></td>
+            <td>
+              <form method="post" action="/school/register" style="display:inline" <% if (org.approved) { %>data-confirm="Revoke approval for this organization?"<% } %>>
+                <input type="hidden" name="action" value="approve">
+                <input type="hidden" name="org_id" value="<%= org.id %>">
+                <input type="hidden" name="approve" value="<%= org.approved ? 0 : 1 %>">
+                <button type="submit" class="btn btn-secondary btn-sm" data-loading-text="Updating…">
+                  <%= org.approved ? 'Revoke' : 'Approve' %>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/layout-bottom') %>

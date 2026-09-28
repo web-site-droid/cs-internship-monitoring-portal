@@ -1,0 +1,227 @@
+<%- include('../partials/layout-top') %>
+<% const defaultPassword = typeof defaultStudentPassword !== 'undefined' ? defaultStudentPassword : 'lssti12345';
+   const canManage = typeof canManageUsers !== 'undefined' && canManageUsers; %>
+
+<div class="dashboard-grid">
+  <% if (canManage && typeof editUser !== 'undefined' && editUser) { %>
+  <div class="card full-width student-entry-card">
+    <div class="card-header">
+      <div>
+        <h2>Edit Account</h2>
+        <small><%= editUser.name %> · <%= editUser.email %>. Leave the new password blank to keep the current one.</small>
+      </div>
+    </div>
+    <form method="post" action="/supervisor/users/<%= editUser.id %>/update" class="student-entry-form" data-noConfirm>
+      <div class="user-edit-fields">
+        <div class="form-group user-edit-first">
+          <label for="editFirstName">First name</label>
+          <input type="text" id="editFirstName" name="first_name" required maxlength="50" value="<%= editUser.first_name || editUser.name || '' %>">
+        </div>
+        <div class="form-group user-edit-mi">
+          <label for="editMiddle">M.I.</label>
+          <input type="text" id="editMiddle" name="middle_initial" maxlength="5" value="<%= editUser.middle_initial || '' %>">
+        </div>
+        <div class="form-group user-edit-last">
+          <label for="editLastName">Last name</label>
+          <input type="text" id="editLastName" name="last_name" required maxlength="50" value="<%= editUser.last_name || '' %>">
+        </div>
+        <div class="form-group user-edit-number" data-student-only>
+          <label for="editStudentNumber">Student number</label>
+          <input type="text" id="editStudentNumber" name="student_number" maxlength="50" value="<%= editUser.student_number || '' %>">
+        </div>
+        <div class="form-group user-edit-email">
+          <label for="editEmail">Email</label>
+          <input type="email" id="editEmail" name="email" required value="<%= editUser.email || '' %>">
+        </div>
+        <div class="form-group user-edit-phone">
+          <label for="editPhone">Phone</label>
+          <input type="tel" id="editPhone" name="phone" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="0917 123 4567" value="<%= editUser.phone || '' %>">
+        </div>
+        <div class="form-group user-edit-role">
+          <label for="editRole">Type</label>
+          <select id="editRole" name="role" required>
+            <option value="student" <%= editUser.role === 'student' ? 'selected' : '' %>>Student</option>
+            <option value="supervisor" <%= editUser.role === 'supervisor' ? 'selected' : '' %>>Staff</option>
+            <option value="admin" <%= editUser.role === 'admin' ? 'selected' : '' %>>Admin</option>
+            <option value="school" <%= editUser.role === 'school' ? 'selected' : '' %>>Company</option>
+          </select>
+        </div>
+        <div class="form-group user-edit-current">
+          <label>Current password</label>
+          <input type="text" readonly value="<%= editUser.password_visible || 'Not on file' %>">
+        </div>
+        <div class="form-group user-edit-new">
+          <label for="editPassword">New password</label>
+          <input type="text" id="editPassword" name="password" minlength="6" autocomplete="off" placeholder="Optional">
+        </div>
+        <div class="form-group user-edit-confirm">
+          <label for="editConfirmPassword">Confirm new password</label>
+          <input type="text" id="editConfirmPassword" name="confirm_password" minlength="6" autocomplete="off" placeholder="Optional">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit" class="btn btn-primary btn-sm" data-loading-text="Saving…">Save Account</button>
+        <a href="/supervisor/users" class="btn btn-secondary btn-sm">Cancel</a>
+      </div>
+    </form>
+  </div>
+  <% } else { %>
+  <div class="card full-width student-entry-card">
+    <div class="student-entry-layout">
+      <div class="student-entry-add">
+        <div class="card-header">
+          <div>
+            <h2><%= canManage ? 'Add Account' : 'Add One Student' %></h2>
+            <small><% if (canManage) { %>Students use password <strong><%= defaultPassword %></strong>. Staff and admin use the password you enter.<% } else { %>Default password is <strong><%= defaultPassword %></strong>.<% } %></small>
+          </div>
+        </div>
+        <form method="post" action="/supervisor/users/student" class="student-entry-form" id="addAccountForm" data-noConfirm>
+          <div class="student-entry-fields">
+            <div class="form-group student-entry-first">
+              <label for="studentFirstName">First name</label>
+              <input type="text" id="studentFirstName" name="first_name" required maxlength="50">
+            </div>
+            <div class="form-group student-entry-mi">
+              <label for="studentMiddle">M.I.</label>
+              <input type="text" id="studentMiddle" name="middle_initial" maxlength="5">
+            </div>
+            <div class="form-group student-entry-last">
+              <label for="studentLastName">Last name</label>
+              <input type="text" id="studentLastName" name="last_name" required maxlength="50">
+            </div>
+            <% if (canManage) { %>
+            <div class="form-group student-entry-number">
+              <label for="accountRole">Type</label>
+              <select id="accountRole" name="role" required>
+                <option value="student" selected>Student</option>
+                <option value="supervisor">Staff</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <% } else { %>
+            <div class="form-group student-entry-number" data-student-only>
+              <label for="studentNumber">Student number</label>
+              <input type="text" id="studentNumber" name="student_number" maxlength="50">
+            </div>
+            <% } %>
+            <div class="form-group student-entry-email">
+              <label for="studentEmail">Email</label>
+              <input type="email" id="studentEmail" name="email" required>
+            </div>
+            <div class="form-group student-entry-phone">
+              <label for="studentPhone">Phone</label>
+              <input type="tel" id="studentPhone" name="phone" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="0917 123 4567">
+            </div>
+          </div>
+          <div class="account-extra-fields">
+            <% if (canManage) { %>
+            <div class="form-group" data-student-only>
+              <label for="studentNumber">Student number</label>
+              <input type="text" id="studentNumber" name="student_number" maxlength="50">
+            </div>
+            <% } %>
+            <div class="form-group" data-student-only>
+              <label for="studentPassword">Password</label>
+              <input type="text" id="studentPassword" value="<%= defaultPassword %>" readonly>
+            </div>
+            <% if (canManage) { %>
+            <div class="form-group hidden" data-staff-only>
+              <label for="accountPassword">Password</label>
+              <input type="text" id="accountPassword" name="password" minlength="6" autocomplete="off" value="<%= defaultPassword %>" data-default="<%= defaultPassword %>">
+            </div>
+            <div class="form-group hidden" data-staff-only>
+              <label for="accountConfirmPassword">Confirm password</label>
+              <input type="text" id="accountConfirmPassword" name="confirm_password" minlength="6" autocomplete="off" value="<%= defaultPassword %>" data-default="<%= defaultPassword %>">
+            </div>
+            <% } %>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" data-loading-text="Adding…"><%= canManage ? 'Add Account' : 'Add Student' %></button>
+        </form>
+      </div>
+
+      <div class="student-entry-import">
+        <div class="card-header">
+          <div>
+            <h2>Import Students</h2>
+            <small>Same columns as the sample file. Password is <strong><%= defaultPassword %></strong>.</small>
+          </div>
+        </div>
+        <form method="post" action="/supervisor/users/import" enctype="multipart/form-data" class="student-entry-form" data-noConfirm>
+          <div class="form-group">
+            <label for="studentsFile">Excel file</label>
+            <input type="file" id="studentsFile" name="students_file" accept=".xlsx,.xls,.csv" required>
+          </div>
+          <div class="student-import-actions">
+            <a href="/supervisor/users/sample" class="btn btn-secondary btn-sm">Download sample</a>
+            <button type="submit" class="btn btn-secondary btn-sm" data-loading-text="Importing…">Import Students</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (canManage) { %>
+    <%- include('partials/all-accounts-panel') %>
+  <% } else { %>
+  <div class="card full-width">
+    <div class="card-header">
+      <div>
+        <h2>Students</h2>
+        <small>Student accounts only. Editing and deleting are limited to the administrator.</small>
+      </div>
+    </div>
+    <% if (!users.length) { %>
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <p>No accounts found</p>
+      </div>
+    <% } else { %>
+      <div class="table-wrapper" data-search-label="accounts">
+        <table class="table supervisor-data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Type</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(function(u) { %>
+              <tr>
+                <td><strong><%= u.name %></strong></td>
+                <td><%= u.email %></td>
+                <td><%= h.roleLabel(u.role) %></td>
+                <td><%= u.phone || '—' %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+
+<script>
+function syncAccountFields(roleSelect) {
+  const isStudent = !roleSelect || roleSelect.value === 'student';
+  const root = roleSelect?.closest('form') || document;
+  root.querySelectorAll('[data-student-only]').forEach((el) => el.classList.toggle('hidden', !isStudent));
+  root.querySelectorAll('[data-staff-only]').forEach((el) => {
+    el.classList.toggle('hidden', isStudent);
+    el.querySelectorAll('input').forEach((input) => {
+      input.required = !isStudent;
+      input.value = isStudent ? '' : (input.dataset.default || input.value);
+    });
+  });
+}
+
+document.getElementById('accountRole')?.addEventListener('change', (event) => syncAccountFields(event.target));
+document.getElementById('editRole')?.addEventListener('change', (event) => syncAccountFields(event.target));
+syncAccountFields(document.getElementById('accountRole'));
+syncAccountFields(document.getElementById('editRole'));
+</script>
+
+<%- include('../partials/layout-bottom') %>

@@ -1,0 +1,11 @@
+<%- include('../partials/layout-top') %>
+
+<%- include('../partials/notifications-panel', {
+  markReadAction: '/supervisor/notifications/read',
+  emptyHint: 'System alerts like password reset requests will appear here — not in Messages.',
+  showSendLink: true,
+  sendLinkHref: '/supervisor/notify',
+  sendLinkLabel: 'Send Notification'
+}) %>
+
+<%- include('../partials/layout-bottom') %>

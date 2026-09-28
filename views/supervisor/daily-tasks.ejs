@@ -1,0 +1,9 @@
+<%- include('../partials/layout-top') %>
+
+<%- include('partials/daily-tasks-panel', { bscsGroup, taskDate, tasksByStudent }) %>
+
+<%- include('../partials/layout-bottom') %>
+<script>
+  window.TASKS_BY_STUDENT = <%- JSON.stringify(typeof tasksByStudent !== 'undefined' ? tasksByStudent : {}) %>;
+</script>
+<script src="/assets/js/supervisor-students.js" defer></script>

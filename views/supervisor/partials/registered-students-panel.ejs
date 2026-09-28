@@ -1,0 +1,148 @@
+<%
+  function programSlug(name) {
+    if (typeof h.programSlug === 'function') return h.programSlug(name);
+    return String(name).replace(/[^a-z0-9]/gi, '').toLowerCase() || 'program';
+  }
+  const slug = programSlug(bscsGroup.program);
+%>
+<div class="card full-width" id="registered-students" style="margin-top:20px">
+  <div class="card-header">
+    <div>
+      <h2>Registered Students</h2>
+      <small>Students with active internship portal accounts.</small>
+    </div>
+  </div>
+
+  <form method="post" action="/supervisor/students/required-hours" class="clearance-requirements-form program-detail-hours" style="margin-bottom:20px" data-noConfirm>
+    <input type="hidden" name="course_program" value="<%= bscsGroup.program %>">
+    <h4 class="profile-subsection-title">Required Hours (program default)</h4>
+    <div class="form-group" style="max-width:280px">
+      <label for="requiredHours<%= slug %>">Required validated hours</label>
+      <input type="number" id="requiredHours<%= slug %>" name="required_hours" min="1" max="2000" step="1" value="<%= bscsGroup.required_hours %>" required>
+    </div>
+    <button type="submit" class="btn btn-secondary btn-sm" data-loading-text="Saving…">Save Required Hours</button>
+  </form>
+
+  <% if (students.length) { %>
+  <form method="post" action="/supervisor/students/grant-hours" class="clearance-requirements-form" style="margin-bottom:20px;padding:14px;border:1px solid var(--border-default);border-radius:10px" data-confirm="Add validated hours to this student?">
+    <h4 class="profile-subsection-title">Grant Validated Hours</h4>
+    <p class="field-hint" style="margin:0 0 12px">Manually credit validated internship hours (counts toward clearance).</p>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+      <div class="form-group" style="margin:0;min-width:200px">
+        <label for="grantHoursStudent<%= slug %>">Student</label>
+        <select id="grantHoursStudent<%= slug %>" name="student_id" required>
+          <option value="">Select student</option>
+          <% students.forEach(function(s) { %>
+            <option value="<%= s.id %>"><%= s.name %> — <%= Number(s.validated_hours || 0).toFixed(1) %> / <%= s.required_hours || bscsGroup.required_hours %> hrs</option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;max-width:120px">
+        <label for="grantHoursAmount<%= slug %>">Hours</label>
+        <input type="number" id="grantHoursAmount<%= slug %>" name="hours" min="0.25" max="12" step="0.25" required placeholder="e.g. 8">
+      </div>
+      <div class="form-group" style="margin:0;max-width:160px">
+        <label for="grantHoursDate<%= slug %>">Date</label>
+        <input type="date" id="grantHoursDate<%= slug %>" name="log_date" required>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:180px">
+        <label for="grantHoursNote<%= slug %>">Note (optional)</label>
+        <input type="text" id="grantHoursNote<%= slug %>" name="note" maxlength="200" placeholder="Reason or reference">
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" data-loading-text="Saving…">Grant Hours</button>
+    </div>
+  </form>
+  <% } %>
+
+  <% if (!students.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <p>No student accounts yet</p>
+      <small>Students appear here after an administrator adds them.</small>
+    </div>
+  <% } else { %>
+    <form
+      method="post"
+      action="/supervisor/students/required-hours/selected"
+      id="registeredStudentsHoursForm"
+      class="ojt-location-bulk-bar hidden"
+      data-noConfirm
+      aria-live="polite"
+    >
+      <span id="registeredStudentsSelectedCount">0 selected</span>
+      <div class="form-group" style="margin:0">
+        <label for="bulkRequiredHours<%= slug %>">Required hours</label>
+        <input
+          type="number"
+          id="bulkRequiredHours<%= slug %>"
+          name="required_hours"
+          min="1"
+          max="2000"
+          step="1"
+          value="<%= bscsGroup.required_hours %>"
+          required
+          style="max-width:120px"
+        >
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" id="registeredStudentsSetHoursBtn" disabled data-loading-text="Saving…">Set required hours</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="registeredStudentsClearSelectionBtn">Clear selection</button>
+    </form>
+    <div class="table-wrapper" data-search-label="registered students">
+      <table class="table supervisor-data-table registered-students-table">
+        <thead>
+          <tr>
+            <th class="ojt-select-col" aria-label="Select students">
+              <input type="checkbox" id="registeredStudentsSelectAll" class="ojt-student-select-all" aria-label="Select all students" title="Select all">
+            </th>
+            <th>Student</th>
+            <th>Program</th>
+            <th>Validated Hours</th>
+            <th>Clearance</th>
+            <th>OJT Site</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% students.forEach(function(s) {
+            const hasSite = s.ojt_latitude != null && s.ojt_longitude != null && (s.ojt_site_name || '').trim();
+            const isCleared = (s.clearance_status || '') === 'cleared';
+          %>
+            <tr data-registered-row data-student-id="<%= s.id %>"<%= isCleared ? ' data-cleared="1"' : '' %>>
+              <td class="ojt-select-col">
+                <input
+                  type="checkbox"
+                  class="ojt-student-select"
+                  form="registeredStudentsHoursForm"
+                  name="student_ids[]"
+                  value="<%= s.id %>"
+                  data-registered-select
+                  data-student-id="<%= s.id %>"
+                  aria-label="Select <%= s.name %>"
+                  <%= isCleared ? 'disabled title="Required hours are locked for cleared students"' : '' %>
+                >
+              </td>
+              <td>
+                <strong><%= s.name %></strong><br>
+                <small style="color:var(--gray-600)"><%= s.email %></small>
+              </td>
+              <td><%= s.course_program || bscsGroup.program %></td>
+              <td><%= Number(s.validated_hours || 0).toFixed(1) %> / <%= s.required_hours || bscsGroup.required_hours %> hrs</td>
+              <td><%- h.renderStatusBadge(s.clearance_status || 'pending') %></td>
+              <td>
+                <% if (hasSite) { %>
+                  <span class="status-badge status-approved">Set</span>
+                <% } else { %>
+                  <span class="status-badge status-pending">Not set</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<script>
+document.querySelectorAll('[id^="grantHoursDate"]').forEach((input) => {
+  if (!input.value) input.value = new Date().toISOString().slice(0, 10);
+});
+</script>

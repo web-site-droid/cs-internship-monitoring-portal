@@ -1,0 +1,228 @@
+<%- include('../partials/layout-top') %>
+
+<div class="card full-width" style="margin-bottom:20px">
+  <div class="card-header">
+    <div>
+      <h2>Pending Task Submissions</h2>
+      <% if (canValidateTasks) { %>
+        <small>Students submitted daily tasks — review feedback and proof, then approve or reject.</small>
+      <% } else { %>
+        <small>Monitor only — administrators review daily task submissions.</small>
+      <% } %>
+    </div>
+  </div>
+  <% if (!pendingTasks.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>No pending task submissions</p>
+      <small>Students will appear here after they submit tasks on Submit Reports.</small>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper" data-search-label="pending tasks">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Date</th>
+          <th>Task</th>
+          <th>Feedback</th>
+          <th>Proof</th>
+          <th>Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% pendingTasks.forEach(function(task) { %>
+        <tr>
+          <td><%= task.student_name %></td>
+          <td><%= h.formatDate(task.task_date) %></td>
+          <td>
+            <strong><%= task.title %></strong>
+            <% if (task.description) { %>
+              <br><small style="color:var(--gray-600)"><%= task.description %></small>
+            <% } %>
+          </td>
+          <td><%= task.student_progress.length > 100 ? task.student_progress.slice(0, 100) + '…' : task.student_progress %></td>
+          <td>
+            <% if (task.proof_photo) { %>
+              <button type="button" class="view-photo-btn" data-photo-url="<%= task.proof_photo %>" data-photo-title="Proof Photo" data-photo-label="<%= task.title %> — <%= task.student_name %>">View Proof</button>
+            <% } else { %>
+              <span style="color:var(--gray-600)">—</span>
+            <% } %>
+          </td>
+          <td><%= h.formatDateTime(task.progress_submitted_at) %></td>
+          <td class="action-row">
+            <% if (canValidateTasks) { %>
+              <button type="button" class="btn btn-primary btn-sm" data-validate data-id="<%= task.id %>" data-action="approved" data-type="task" data-api="<%= apiUrl %>" data-require-reject-note="1">Approve</button>
+              <button type="button" class="btn btn-danger btn-sm" data-validate data-id="<%= task.id %>" data-action="rejected" data-type="task" data-api="<%= apiUrl %>" data-require-reject-note="1">Reject</button>
+            <% } else { %>
+              <span class="status-badge status-pending">Awaiting admin</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<% if (canValidateTasks) { %>
+<div class="card full-width" style="margin-bottom:20px">
+  <div class="card-header">
+    <div>
+      <h2>Validation Records</h2>
+      <small>Approved and rejected task submissions stay here.</small>
+    </div>
+  </div>
+  <% if (!reviewedTasks.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📁</div>
+      <p>No validation records yet</p>
+      <small>When you approve or reject a task, it is saved in this list.</small>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper" data-search-label="validation records">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Date</th>
+          <th>Task</th>
+          <th>Feedback</th>
+          <th>Proof</th>
+          <th>Status</th>
+          <th>Note</th>
+          <th>Reviewed</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% reviewedTasks.forEach(function(task) {
+        const feedback = task.student_progress || '';
+      %>
+        <tr>
+          <td><%= task.student_name %></td>
+          <td><%= h.formatDate(task.task_date) %></td>
+          <td>
+            <strong><%= task.title %></strong>
+            <% if (task.description) { %>
+              <br><small style="color:var(--gray-600)"><%= task.description %></small>
+            <% } %>
+          </td>
+          <td><%= feedback.length > 100 ? feedback.slice(0, 100) + '…' : feedback %></td>
+          <td>
+            <% if (task.proof_photo) { %>
+              <button type="button" class="view-photo-btn" data-photo-url="<%= task.proof_photo %>" data-photo-title="Proof Photo" data-photo-label="<%= task.title %> — <%= task.student_name %>">View Proof</button>
+            <% } else { %>
+              <span style="color:var(--gray-600)">—</span>
+            <% } %>
+          </td>
+          <td><%- h.renderStatusBadge(task.status) %></td>
+          <td><%= task.review_note || '—' %></td>
+          <td><%= task.reviewed_at ? h.formatDateTime(task.reviewed_at) : '—' %></td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+<% } %>
+
+<div class="card full-width" style="margin-bottom:20px">
+  <div class="card-header">
+    <div>
+      <h2>Pending Hour Logs</h2>
+      <small>Students who have not been cleared yet.</small>
+    </div>
+  </div>
+  <% if (!unclearedStudents.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>No students waiting for clearance</p>
+      <small>Every student has already been cleared.</small>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper" data-search-label="uncleared students">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Email</th>
+          <th>Hours</th>
+          <th>Remaining</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% unclearedStudents.forEach(function(student) { %>
+        <tr>
+          <td><%= student.name %></td>
+          <td><%= student.email || '—' %></td>
+          <td><%= student.validated_hours.toFixed(1) %> / <%= student.required_hours %></td>
+          <td><%= student.remaining_hours.toFixed(1) %> hrs</td>
+          <td><span class="status-badge status-pending">Not Cleared</span></td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<div class="card full-width">
+  <div class="card-header">
+    <div>
+      <h2>Pending Internship Logs</h2>
+      <small>Tasks assigned to students.</small>
+    </div>
+  </div>
+  <% if (!studentTasks.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>No student tasks yet</p>
+      <small>Assigned tasks will appear here.</small>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper" data-search-label="student tasks">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Date</th>
+          <th>Task</th>
+          <th>Feedback</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% studentTasks.forEach(function(task) {
+        const feedback = task.student_progress || '';
+        const displayStatus = h.getTaskDisplayStatus(task);
+      %>
+        <tr>
+          <td><%= task.student_name %></td>
+          <td><%= h.formatDate(task.task_date) %></td>
+          <td>
+            <strong><%= task.title %></strong>
+            <% if (task.description) { %>
+              <br><small style="color:var(--gray-600)"><%= task.description %></small>
+            <% } %>
+          </td>
+          <td><%= feedback ? (feedback.length > 100 ? feedback.slice(0, 100) + '…' : feedback) : '—' %></td>
+          <td>
+            <% if (!displayStatus) { %>
+              <span class="status-badge status-pending">Assigned</span>
+            <% } else { %>
+              <%- h.renderStatusBadge(displayStatus) %>
+            <% } %>
+          </td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/layout-bottom') %>

@@ -1,0 +1,45 @@
+<%- include('../partials/layout-top') %>
+
+<div class="card full-width">
+  <div class="card-header">
+    <div>
+      <h2>Student Performance Records</h2>
+      <small>Overview of hours, reports, and evaluation scores.</small>
+    </div>
+  </div>
+  <% if (!students.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📈</div>
+      <p>No student records yet</p>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Validated Hours</th>
+          <th>Reports</th>
+          <th>Pending</th>
+          <th>Avg Score</th>
+          <th>Clearance</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% students.forEach(function(s) { %>
+        <tr>
+          <td><strong><%= s.name %></strong><br><small style="color:var(--gray-400)"><%= s.email %></small></td>
+          <td><%= s.validated_hours.toFixed(1) %> hrs</td>
+          <td><%= s.total_logs %></td>
+          <td><%= s.pending_hours + s.pending_logs %></td>
+          <td><%= s.avg_score || '—' %></td>
+          <td><%- h.renderStatusBadge(s.clearance_status) %></td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/layout-bottom') %>

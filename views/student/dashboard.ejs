@@ -1,0 +1,91 @@
+<%- include('../partials/layout-top') %>
+
+<div class="progress-card">
+  <div class="progress-header">
+    <h3>Clearance Progress</h3>
+    <%- h.renderStatusBadge(clearance.clearance_status) %>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width: <%= clearance.progress %>%"></div>
+  </div>
+  <div class="progress-meta">
+    <span><%= clearance.validated_hours.toFixed(1) %> / <%= clearance.required_hours %> hrs completed</span>
+    <span><%= hoursProgress.remaining_hours.toFixed(1) %> hrs remaining</span>
+  </div>
+</div>
+
+<div class="stats-grid stats-grid-aligned">
+  <div class="stat-card tone-green" data-href="/student/hours" tabindex="0" role="link" aria-label="Go to Hour Log History">
+    <span class="stat-label">Hours Completed</span>
+    <strong class="stat-value"><%= hoursProgress.completed_hours.toFixed(1) %></strong>
+    <small>of <%= hoursProgress.required_hours %> required</small>
+  </div>
+  <div class="stat-card tone-amber" data-href="/student/hours" tabindex="0" role="link" aria-label="Go to Hour Log History">
+    <span class="stat-label">Hours Remaining</span>
+    <strong class="stat-value"><%= hoursProgress.remaining_hours.toFixed(1) %></strong>
+    <small>Until internship requirement is met</small>
+  </div>
+  <div class="stat-card tone-blue" data-href="/student/reports" tabindex="0" role="link" aria-label="Go to Reports">
+    <span class="stat-label">Reports Submitted</span>
+    <strong class="stat-value"><%= submittedTaskCount %></strong>
+    <small>Submitted tasks</small>
+  </div>
+</div>
+
+<%- include('partials/ojt-attendance', { ojt: ojt }) %>
+
+<% if (clearance.clearance_status === 'cleared') {
+  const cert = clearance.certificate;
+%>
+  <% if (cert) { %>
+  <div class="card cert-dashboard-card">
+    <div class="cert-dashboard-inner">
+      <div>
+        <h3 class="section-title" style="margin-bottom:6px">Internship Certificate</h3>
+        <p style="margin:0;color:var(--gray-600)">
+          Your internship completion certificate is ready.
+        </p>
+        <small style="color:var(--gray-500)">Issued <%= h.formatDate(cert.issued_at) %></small>
+      </div>
+      <div>
+        <a href="<%= cert.href %>" class="btn btn-primary" target="_blank" rel="noopener">View Certificate</a>
+        <a href="/student/certificate/download?download=1" class="btn btn-secondary">Download Certificate</a>
+      </div>
+    </div>
+  </div>
+  <% } else { %>
+  <div class="card cert-dashboard-card cert-dashboard-pending">
+    <div class="empty-state" style="padding:16px 0">
+      <div class="empty-icon">🎓</div>
+      <p>Clearance complete — certificate pending</p>
+      <small>Your supervisor will upload the shared certificate on Clearance Reports.</small>
+    </div>
+  </div>
+  <% } %>
+<% } %>
+
+<% if (recentNotifications.length) { %>
+<div class="card">
+  <h3 class="section-title">Recent Notifications</h3>
+  <div class="notification-list">
+    <% recentNotifications.forEach(function(n) {
+      const unread = h.isNotificationUnread(n);
+    %>
+      <div class="notification-item <%= unread ? 'unread' : 'read' %>">
+        <div class="notification-icon"><%= n.kind === 'alert' ? '🔔' : '✔️' %></div>
+        <div class="notification-body">
+          <div class="notification-title-row">
+            <strong><%= h.notificationTitle(n) %></strong>
+            <% if (unread) { %><span class="notification-status-badge new">New</span><% } %>
+          </div>
+          <p><%= h.notificationBody(n).substring(0, 120) %><%= h.notificationBody(n).length > 120 ? '…' : '' %></p>
+          <time><%= h.formatDateTime(n.created_at) %></time>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+  <a href="/student/notifications" class="btn btn-secondary btn-sm" style="margin-top:16px">View all notifications →</a>
+</div>
+<% } %>
+
+<%- include('../partials/layout-bottom') %>

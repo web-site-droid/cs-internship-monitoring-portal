@@ -1,0 +1,29 @@
+<%- include('../partials/layout-top') %>
+
+<div class="card full-width">
+  <% if (!communications.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📡</div>
+      <p>No communications yet</p>
+      <small>Messages between students, companies, and admins will appear here.</small>
+    </div>
+  <% } else { %>
+  <div class="message-list">
+    <% communications.forEach(function(c) { %>
+      <article class="message-item">
+        <header>
+          <strong><%= c.subject || 'No subject' %></strong>
+          <span><%= h.formatDateTime(c.created_at) %></span>
+        </header>
+        <p style="margin:0 0 8px;font-size:0.88rem;color:var(--gray-600)">
+          <%= c.sender_name %> (<%= h.roleLabel(c.sender_role) %>) →
+          <%= c.receiver_name %> (<%= h.roleLabel(c.receiver_role) %>)
+        </p>
+        <p style="margin:0;white-space:pre-wrap"><%= c.message %></p>
+      </article>
+    <% }); %>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/layout-bottom') %>

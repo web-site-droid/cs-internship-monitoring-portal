@@ -1,0 +1,97 @@
+<%- include('../partials/layout-top') %>
+
+<div class="hours-calendar-layout reports-calendar-layout">
+  <div class="card calendar-card task-calendar-card">
+    <div class="calendar-toolbar">
+      <button type="button" class="calendar-nav-btn" id="taskCalPrev" aria-label="Previous month">‹</button>
+      <h2 class="calendar-month-label" id="taskCalMonthLabel"></h2>
+      <button type="button" class="calendar-nav-btn" id="taskCalNext" aria-label="Next month">›</button>
+      <button type="button" class="btn btn-secondary btn-sm calendar-today-btn" id="taskCalToday">Today</button>
+    </div>
+    <div class="calendar-weekdays task-calendar-weekdays">
+      <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+    </div>
+    <div class="calendar-grid task-calendar-grid" id="taskCalendarGrid"></div>
+    <div class="calendar-legend task-calendar-legend">
+      <span><i class="cal-legend-dot cal-legend-present"></i> Present</span>
+      <span><i class="cal-legend-dot cal-legend-absent"></i> Absent</span>
+      <span><i class="cal-legend-dot cal-legend-assigned"></i> Assigned</span>
+      <span><i class="cal-legend-dot cal-legend-review"></i> Submitted</span>
+      <span><i class="cal-legend-dot cal-legend-done"></i> Done</span>
+    </div>
+  </div>
+
+  <div class="card" id="taskDayPanel">
+    <div class="card-header">
+      <div>
+        <h2 id="taskDayPanelTitle">Today's Assigned Tasks</h2>
+        <small id="taskDayPanelSubtitle">Tasks from your supervisor — submit feedback and a photo when done.</small>
+      </div>
+    </div>
+    <div id="taskDayPanelBody"></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <div class="card-header">
+    <div>
+      <h2>Task History</h2>
+      <small>Previously submitted tasks with feedback and photo proof.</small>
+    </div>
+  </div>
+
+  <% const submittedTasks = taskHistory.filter(function(t) { return t.student_progress && t.proof_photo; }); %>
+  <% if (!submittedTasks.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📄</div>
+      <p>No tasks submitted yet</p>
+      <small>Complete assigned tasks to see them here.</small>
+    </div>
+  <% } else { %>
+    <div class="table-wrapper" data-search-label="task history">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Proof</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% submittedTasks.forEach(function(task) {
+          const displayStatus = h.getTaskDisplayStatus(task) || 'pending';
+        %>
+          <tr>
+            <td><%= h.formatDate(task.task_date) %></td>
+            <td>
+              <strong><%= task.title %></strong>
+              <% if (task.student_progress) { %>
+                <br><small style="color:var(--gray-600)"><%= task.student_progress.length > 80 ? task.student_progress.slice(0, 80) + '…' : task.student_progress %></small>
+              <% } %>
+            </td>
+            <td><%- h.renderStatusBadge(displayStatus) %></td>
+            <td>
+              <% if (task.proof_photo) { %>
+                <button type="button" class="view-photo-btn" data-photo-url="<%= task.proof_photo %>" data-photo-title="Proof Photo" data-photo-label="<%= task.title %>">View</button>
+              <% } else { %>—<% } %>
+            </td>
+          </tr>
+        <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  window.TASKS_BY_DATE = <%- JSON.stringify(typeof tasksByDate !== 'undefined' ? tasksByDate : {}) %>;
+  window.ATTENDANCE_BY_DATE = <%- JSON.stringify(typeof attendanceByDate !== 'undefined' ? attendanceByDate : {}) %>;
+  window.INTERNSHIP_START_DATE = <%- JSON.stringify(typeof internshipStartDate !== 'undefined' ? internshipStartDate : null) %>;
+  window.TASK_TODAY = '<%= typeof today !== 'undefined' ? today : "" %>';
+</script>
+<script src="/assets/js/calendar-day-status.js" defer></script>
+<script src="/assets/js/tasks-calendar.js" defer></script>
+<script src="/assets/js/student-reports.js" defer></script>
+
+<%- include('../partials/layout-bottom') %>

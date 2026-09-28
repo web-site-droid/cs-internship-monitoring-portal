@@ -1,0 +1,30 @@
+<%- include('../partials/layout-top') %>
+
+<div class="stats-grid stats-grid-aligned stats-grid-4">
+  <div class="stat-card tone-green" data-href="#all-accounts" tabindex="0" role="link">
+    <span class="stat-label">Students</span>
+    <strong class="stat-value"><%= studentCount %></strong>
+    <small>Student accounts</small>
+  </div>
+  <div class="stat-card tone-blue" data-href="#all-accounts" tabindex="0" role="link">
+    <span class="stat-label">Staff</span>
+    <strong class="stat-value"><%= staffCount %></strong>
+    <small>Staff accounts</small>
+  </div>
+  <div class="stat-card tone-amber" data-href="#all-accounts" tabindex="0" role="link">
+    <span class="stat-label">Users</span>
+    <strong class="stat-value"><%= userCount %></strong>
+    <small>All accounts</small>
+  </div>
+  <div class="stat-card tone-green" data-href="/school/reports" tabindex="0" role="link">
+    <span class="stat-label">Cleared Students</span>
+    <strong class="stat-value"><%= clearedCount %></strong>
+    <small>Required hours completed</small>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <%- include('../supervisor/partials/all-accounts-panel') %>
+</div>
+
+<%- include('../partials/layout-bottom') %>

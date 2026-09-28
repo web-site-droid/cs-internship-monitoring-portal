@@ -1,0 +1,41 @@
+<%- include('../partials/layout-top') %>
+
+<div class="dashboard-grid messages-layout">
+  <div class="card" id="messageComposeCard">
+    <h2>Send Message</h2>
+    <form method="post" action="<%= formAction %>" id="messageComposeForm" data-noConfirm>
+      <div class="form-group">
+        <label for="messageReceiver">To</label>
+        <select name="receiver_id" id="messageReceiver" required>
+          <option value="">Select recipient</option>
+          <% contacts.forEach(function(c) { %>
+            <option value="<%= c.id %>"><%= c.name %> (<%= c.role === 'supervisor' ? 'Supervisor/Teacher' : (c.role === 'admin' || c.role === 'school' ? 'Admin' : 'Student') %>)</option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="messageSubject">Subject</label>
+        <input type="text" name="subject" id="messageSubject" placeholder="Optional subject">
+      </div>
+      <div class="form-group">
+        <label for="messageBody">Message</label>
+        <textarea name="message" id="messageBody" rows="4" required data-maxlength="1000" placeholder="Write your message..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" data-loading-text="Sending…">Send</button>
+    </form>
+  </div>
+
+  <div class="card messages-inbox-card">
+    <h2 class="inbox-heading">
+      <span class="inbox-heading-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      Inbox
+    </h2>
+    <p class="inbox-hint">Direct conversations only. System alerts appear under <strong>Notifications</strong> (bell icon).</p>
+    <%- include('messages-inbox', { emptyHint: 'Send a message to start a conversation.' }) %>
+  </div>
+</div>
+
+<%- include('../partials/layout-bottom') %>
+<script src="/assets/js/messages.js" defer></script>

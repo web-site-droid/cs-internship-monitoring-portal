@@ -1,0 +1,79 @@
+<%- include('../partials/layout-top') %>
+
+<div class="hours-calendar-layout">
+  <div class="card calendar-card task-calendar-card">
+    <div class="calendar-toolbar">
+      <button type="button" class="calendar-nav-btn" id="calPrev" aria-label="Previous month">‹</button>
+      <h2 class="calendar-month-label" id="calMonthLabel"></h2>
+      <button type="button" class="calendar-nav-btn" id="calNext" aria-label="Next month">›</button>
+      <button type="button" class="btn btn-secondary btn-sm calendar-today-btn" id="calToday">Today</button>
+    </div>
+    <div class="calendar-weekdays task-calendar-weekdays">
+      <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+    </div>
+    <div class="calendar-grid task-calendar-grid" id="calendarGrid"></div>
+    <div class="calendar-legend task-calendar-legend">
+      <span><i class="cal-legend-dot cal-legend-present"></i> Present</span>
+      <span><i class="cal-legend-dot cal-legend-absent"></i> Absent</span>
+      <span><i class="cal-legend-dot cal-legend-assigned"></i> Task assigned</span>
+      <span><i class="cal-legend-dot cal-legend-done"></i> Task done</span>
+    </div>
+  </div>
+
+  <div class="card hours-log-panel">
+    <div class="card-header">
+      <div>
+        <h2>Hour Log History</h2>
+        <small>Time in, time out, hours, and the log you submitted.</small>
+      </div>
+    </div>
+
+    <% if (!entries.length) { %>
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No hours logged yet</p>
+        <small>Time in and out on your dashboard to auto-log hours.</small>
+      </div>
+    <% } else { %>
+      <div class="table-wrapper" data-search-label="hour log history">
+        <table class="table" id="hourLogTable">
+          <thead>
+            <tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Result</th><th>Student Log</th></tr>
+          </thead>
+          <tbody>
+          <% entries.forEach(function(entry) { %>
+            <tr data-date="<%= entry.log_date %>">
+              <td><%= h.formatDate(entry.log_date) %></td>
+              <td><%= entry.time_in_at ? h.formatTime(entry.time_in_at) : '—' %></td>
+              <td><%= entry.time_out_at ? h.formatTime(entry.time_out_at) : '—' %></td>
+              <td><%= entry.hours != null && entry.hours !== '' ? Number(entry.hours).toFixed(2) : '—' %></td>
+              <td>
+                <% if (!entry.result) { %>
+                  —
+                <% } else { %>
+                  <% entry.result.split(', ').forEach(function(label) { %>
+                    <span class="status-badge <%= label === 'Approved' ? 'status-approved' : (label === 'Rejected' ? 'status-rejected' : 'status-pending') %>"><%= label %></span>
+                  <% }); %>
+                <% } %>
+              </td>
+              <td style="white-space:pre-line"><%= entry.description || '—' %></td>
+            </tr>
+          <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  window.HOUR_ENTRIES = <%- JSON.stringify(typeof entriesByDate !== 'undefined' ? entriesByDate : {}) %>;
+  window.TASKS_BY_DATE = <%- JSON.stringify(typeof tasksByDate !== 'undefined' ? tasksByDate : {}) %>;
+  window.ATTENDANCE_BY_DATE = <%- JSON.stringify(typeof attendanceByDate !== 'undefined' ? attendanceByDate : {}) %>;
+  window.INTERNSHIP_START_DATE = <%- JSON.stringify(typeof internshipStartDate !== 'undefined' ? internshipStartDate : null) %>;
+  window.HOUR_TODAY = '<%= typeof today !== 'undefined' ? today : "" %>';
+</script>
+<script src="/assets/js/calendar-day-status.js" defer></script>
+<script src="/assets/js/hours-calendar.js" defer></script>
+
+<%- include('../partials/layout-bottom') %>

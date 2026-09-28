@@ -1,0 +1,35 @@
+<%- include('../partials/layout-top') %>
+
+<div class="card full-width">
+  <% if (!logs.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📄</div>
+      <p>No student reports yet</p>
+      <small>Reports will appear here when students submit them.</small>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr><th>Student</th><th>Title</th><th>Description</th><th>Status</th><th>Submitted</th></tr>
+      </thead>
+      <tbody>
+      <% logs.forEach(function(log) { %>
+        <tr>
+          <td><strong><%= log.student_name %></strong></td>
+          <td><%= log.title %></td>
+          <td><%= (log.description || '').substring(0, 80) %><%= (log.description || '').length > 80 ? '…' : '' %></td>
+          <td><%- h.renderStatusBadge(log.status) %></td>
+          <td><%= h.formatDate(log.submitted_at) %></td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-top:16px;color:var(--gray-600);font-size:0.9rem">
+    To approve or reject pending reports, go to <a href="<%= user.role === 'school' ? '/school/validate' : '/supervisor/validate' %>"><%= user.role === 'school' ? 'Validate Hours' : 'Validate Activities' %></a>.
+  </p>
+  <% } %>
+</div>
+
+<%- include('../partials/layout-bottom') %>

@@ -1,0 +1,79 @@
+<%- include('../partials/layout-top') %>
+
+<div class="dashboard-grid">
+  <div class="card full-width">
+    <h2>Report History</h2>
+    <p style="color:var(--gray-600);margin-top:0;margin-bottom:16px">
+      One row per student. Upload one shared certificate — pending or cleared status does not block the upload.
+    </p>
+
+    <% const generalCert = (typeof generalCertificate !== 'undefined' && generalCertificate) ? generalCertificate : null; %>
+    <div class="general-certificate-panel" style="margin-bottom:20px;padding:16px;border:1px solid var(--gray-200);border-radius:10px;background:linear-gradient(180deg,#f8fcf9 0%,#fff 100%)">
+      <h3 class="section-title" style="margin:0 0 6px">Shared Certificate</h3>
+      <p style="color:var(--gray-600);margin:0 0 14px;font-size:0.95rem">
+        Upload once — every student with a clearance report will see this same certificate.
+      </p>
+      <% if (generalCert && generalCert.certificate_path) { %>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <a href="<%= generalCert.certificate_path %>" class="btn btn-primary btn-sm" target="_blank" rel="noopener">View Certificate</a>
+          <a href="<%= reportPath %>/certificate/download?download=1" class="btn btn-secondary btn-sm">Download Certificate</a>
+          <form method="post" action="<%= reportPath %>/certificate" enctype="multipart/form-data" data-noConfirm class="shared-cert-upload-form">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <input type="file" name="certificate" accept=".pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" required>
+              <button type="submit" class="btn btn-secondary btn-sm" data-loading-text="Uploading…">Replace Certificate</button>
+            </div>
+          </form>
+          <small style="color:var(--gray-500)">
+            Uploaded <%= h.formatDate(generalCert.uploaded_at) %>
+            <% if (generalCert.uploaded_by_name) { %> by <%= generalCert.uploaded_by_name %><% } %>
+          </small>
+        </div>
+      <% } else { %>
+        <form method="post" action="<%= reportPath %>/certificate" enctype="multipart/form-data" data-noConfirm class="shared-cert-upload-form">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input type="file" name="certificate" accept=".pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" required>
+            <button type="submit" class="btn btn-primary btn-sm" data-loading-text="Uploading…">Upload Certificate</button>
+            <small style="color:var(--gray-500)">PDF, JPG, PNG, or WebP — max 5 MB</small>
+          </div>
+        </form>
+      <% } %>
+    </div>
+
+    <% if (!reports.length) { %>
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No reports generated yet</p>
+        <small>Generate a report once a student completes required validated hours.</small>
+      </div>
+    <% } else { %>
+      <div class="table-wrapper" data-search-label="Report history">
+        <table class="table supervisor-data-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Hours</th>
+              <th>Logs</th>
+              <th>Score</th>
+              <th>Status</th>
+              <th>Generated</th>
+            </tr>
+          </thead>
+          <tbody>
+          <% reports.forEach(function(report) { %>
+            <tr>
+              <td><strong><%= report.student_name %></strong></td>
+              <td><%= report.total_hours %></td>
+              <td><%= report.total_logs %></td>
+              <td><%= report.evaluation_score %></td>
+              <td><%- h.renderStatusBadge(report.clearance_status) %></td>
+              <td><%= h.formatDate(report.generated_at) %></td>
+            </tr>
+          <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/layout-bottom') %>

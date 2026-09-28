@@ -1,0 +1,108 @@
+<%- include('../partials/layout-top') %>
+
+<div class="progress-card">
+  <div class="progress-header">
+    <h3>Internship Clearance</h3>
+    <%- h.renderStatusBadge(clearance.clearance_status) %>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width: <%= clearance.progress %>%"></div>
+  </div>
+  <div class="progress-meta">
+    <span><%= clearance.validated_hours.toFixed(1) %> of <%= clearance.required_hours %> required hours validated</span>
+    <span><%= clearance.progress %>%</span>
+  </div>
+</div>
+
+<div class="stats-grid stats-grid-aligned">
+  <div class="stat-card tone-green" data-href="/student/hours" tabindex="0" role="link">
+    <span class="stat-label">Validated Hours</span>
+    <strong class="stat-value"><%= clearance.validated_hours.toFixed(1) %></strong>
+    <small>Approved by company</small>
+  </div>
+  <div class="stat-card tone-blue" data-href="/student/reports" tabindex="0" role="link">
+    <span class="stat-label">Reports Approved</span>
+    <strong class="stat-value"><%= clearance.approved_logs %></strong>
+    <small>Submitted internship reports</small>
+  </div>
+  <div class="stat-card tone-amber">
+    <span class="stat-label">Evaluation Score</span>
+    <strong class="stat-value"><%= clearance.avg_score || '—' %></strong>
+    <small><%= clearance.eval_count %> evaluation(s)</small>
+  </div>
+</div>
+
+<% const cert = clearance.certificate; %>
+<% if (cert) { %>
+<div class="card" style="margin-top:20px;border-color:var(--green-200);background:linear-gradient(180deg,#f8fcf9 0%,#fff 100%)">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+    <div>
+      <h3 class="section-title" style="margin-bottom:6px">Internship Certificate</h3>
+      <p style="margin:0;color:var(--gray-600)">
+        Your internship completion certificate is ready.
+      </p>
+      <small style="color:var(--gray-500)">Issued <%= h.formatDate(cert.issued_at) %></small>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="<%= cert.href %>" class="btn btn-primary" target="_blank" rel="noopener">View Certificate</a>
+      <a href="/student/certificate/download?download=1" class="btn btn-secondary">Download Certificate</a>
+    </div>
+  </div>
+</div>
+<% } else if (clearance.hours_met || clearance.reports.length) { %>
+<div class="card" style="margin-top:20px">
+  <div class="empty-state">
+    <div class="empty-icon">🎓</div>
+    <p>Certificate pending</p>
+    <small>Your supervisor will upload the shared certificate on Clearance Reports.</small>
+  </div>
+</div>
+<% } %>
+
+<div class="card">
+  <h3 class="section-title">Clearance Requirements</h3>
+  <ul style="margin:0;padding-left:20px;color:var(--gray-600);line-height:2">
+    <li>Minimum <strong><%= clearance.required_hours %> validated hours</strong> — <%= clearance.hours_met ? '✅ Met' : '⏳ In progress' %></li>
+    <li>At least <strong><%= clearance.required_reports %> approved report<%= clearance.required_reports === 1 ? '' : 's' %></strong> — <%= clearance.reports_met ? '✅ Met' : '⏳ Pending' %></li>
+    <li>At least <strong><%= clearance.required_evaluations %> supervisor evaluation<%= clearance.required_evaluations === 1 ? '' : 's' %></strong> — <%= clearance.evaluations_met ? '✅ Met' : '⏳ Pending' %></li>
+    <% if (clearance.custom_requirements && clearance.custom_requirements.length) { %>
+      <% clearance.custom_requirements.forEach(function(item) { %>
+        <li><%= item %></li>
+      <% }); %>
+    <% } %>
+  </ul>
+</div>
+
+<% if (clearance.reports.length) { %>
+<div class="card" style="margin-top:20px">
+  <h3 class="section-title">Clearance Report History</h3>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr><th>Date</th><th>Hours</th><th>Logs</th><th>Score</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+      <% clearance.reports.forEach(function(r) { %>
+        <tr>
+          <td><%= h.formatDate(r.generated_at) %></td>
+          <td><%= r.total_hours %></td>
+          <td><%= r.total_logs %></td>
+          <td><%= r.evaluation_score %></td>
+          <td><%- h.renderStatusBadge(r.clearance_status) %></td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } else { %>
+<div class="card" style="margin-top:20px">
+  <div class="empty-state">
+    <div class="empty-icon">📊</div>
+    <p>No clearance report generated yet</p>
+    <small>Your supervisor will generate a report and certificate after you complete required validated hours.</small>
+  </div>
+</div>
+<% } %>
+
+<%- include('../partials/layout-bottom') %>

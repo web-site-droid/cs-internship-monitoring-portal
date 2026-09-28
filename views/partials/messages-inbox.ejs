@@ -1,0 +1,90 @@
+<% 
+  let threadList = typeof threads !== 'undefined' && Array.isArray(threads) ? threads : [];
+  if (!threadList.length && typeof messages !== 'undefined' && Array.isArray(messages) && messages.length) {
+    if (typeof groupInboxThreads === 'function') {
+      threadList = groupInboxThreads(user.id, messages);
+    } else if (typeof h !== 'undefined' && typeof h.groupMessageThreads === 'function') {
+      threadList = h.groupMessageThreads(user.id, messages);
+    }
+  }
+%>
+<% if (!threadList.length) { %>
+  <div class="empty-state">
+    <div class="empty-icon">💬</div>
+    <p>No messages yet</p>
+    <small><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Send a message to start a conversation.' %></small>
+  </div>
+<% } else { %>
+  <% const totalMessages = threadList.reduce(function(sum, t) { return sum + t.messageCount; }, 0); %>
+  <p class="inbox-count"><%= threadList.length %> conversation<%= threadList.length === 1 ? '' : 's' %> (<%= totalMessages %> message<%= totalMessages === 1 ? '' : 's' %>) — click to expand</p>
+  <div class="inbox-scroll" tabindex="0" aria-label="Message list">
+    <div class="message-list message-list-collapsible">
+      <% threadList.forEach(function(thread) {
+        const latestSent = Number(thread.latest.sender_id) === Number(user.id);
+      %>
+        <details class="message-item message-thread <%= thread.hasUnread ? 'unread' : '' %>">
+          <summary class="message-item-summary">
+            <span class="message-item-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <span class="message-item-main">
+              <span class="message-item-title-row">
+                <strong><%= thread.rootSubject %></strong>
+                <% if (thread.hasUnread) { %><span class="message-unread-dot" title="Unread"></span><% } %>
+                <% if (thread.messageCount > 1) { %>
+                  <span class="thread-count-badge"><%= thread.messageCount %></span>
+                <% } %>
+              </span>
+              <span class="message-item-preview">
+                With <%= thread.contactName %>
+                <% if (thread.latestPreview) { %> · <%= latestSent ? 'You' : thread.contactName %>: <%= thread.latestPreview %><% } %>
+              </span>
+            </span>
+            <span class="message-item-time"><%= h.formatDateTime(thread.latest.created_at) %></span>
+            <span class="message-item-chevron" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </summary>
+          <div class="message-item-body message-thread-body">
+            <p class="message-thread-with">Conversation with <strong><%= thread.contactName %></strong></p>
+            <div class="thread-messages">
+              <% thread.messages.forEach(function(msg) {
+                const isMine = Number(msg.sender_id) === Number(user.id);
+              %>
+                <article class="thread-message <%= isMine ? 'is-mine' : 'is-theirs' %>">
+                  <div class="thread-message-head">
+                    <strong><%= isMine ? 'You' : msg.sender_name %></strong>
+                    <time><%= h.formatDateTime(msg.created_at) %></time>
+                  </div>
+                  <p class="thread-message-text"><%= msg.message %></p>
+                </article>
+              <% }); %>
+            </div>
+            <div class="message-item-actions">
+              <% 
+                const incomingMessages = thread.messages.filter(function(m) { return Number(m.sender_id) !== Number(user.id); });
+                const replyTarget = incomingMessages.length ? incomingMessages[incomingMessages.length - 1] : thread.messages[thread.messages.length - 1];
+                const replyReceiverId = replyTarget
+                  ? (Number(replyTarget.sender_id) === Number(user.id) ? replyTarget.receiver_id : replyTarget.sender_id)
+                  : thread.contactId;
+                const replyReceiverName = replyTarget
+                  ? (Number(replyTarget.sender_id) === Number(user.id) ? replyTarget.receiver_name : replyTarget.sender_name)
+                  : thread.contactName;
+              %>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm message-reply-btn"
+                data-receiver-id="<%= replyReceiverId %>"
+                data-receiver-name="<%= String(replyReceiverName || thread.contactName).replace(/"/g, '&quot;') %>"
+                data-subject="<%= thread.rootSubject.replace(/"/g, '&quot;') %>"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                Reply
+              </button>
+            </div>
+          </div>
+        </details>
+      <% }); %>
+    </div>
+  </div>
+<% } %>

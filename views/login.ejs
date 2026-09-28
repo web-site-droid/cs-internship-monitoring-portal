@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Internship Monitoring Portal for LSSTI Programs</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/notify.js" defer></script>
+  <script src="/assets/js/buttons.js" defer></script>
+</head>
+<body class="login-page">
+  <div class="login-centered-wrap">
+    <div class="login-centered-card">
+      <div class="auth-back-row">
+        <a href="/" class="login-back-btn" aria-label="Back to home">← Back</a>
+      </div>
+      <div class="login-header">
+        <div class="brand-logo-mark brand-logo-mark-lg">
+          <img src="/img/comsie-logo.png" alt="Department of Computer Science LSSTI" class="login-logo">
+        </div>
+        <p class="login-brand-name">
+          Student Internship Monitoring Portal
+          <span>for LSSTI Programs</span>
+        </p>
+      </div>
+
+      <div class="login-body">
+        <%- include('partials/flash') %>
+
+        <form method="post" action="/login" id="loginForm" class="login-form">
+          <div class="login-input-wrap">
+            <span class="login-input-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <input type="email" id="email" name="email" required placeholder="Email address" autocomplete="email">
+          </div>
+
+          <div class="login-input-wrap">
+            <span class="login-input-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input type="password" id="password" name="password" required placeholder="Password" autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="login-gradient-btn" data-loading-text="Signing in…">Login</button>
+        </form>
+
+        <p class="login-register-link">Accounts are created by an administrator.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

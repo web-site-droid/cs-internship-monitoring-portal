@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internship Completion Certificate — <%= report.student_name %></title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #eef3ef;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: 'Poppins', sans-serif;
+    }
+    .cert-toolbar {
+      width: min(900px, 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .cert-page {
+      width: min(900px, 100%);
+      background: #fff;
+      border: 8px double #1f6b45;
+      border-radius: 4px;
+      padding: 48px 56px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+      text-align: center;
+      position: relative;
+    }
+    .cert-page::before,
+    .cert-page::after {
+      content: '';
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(31,107,69,0.25);
+      pointer-events: none;
+    }
+    .cert-brand {
+      color: #1f6b45;
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .cert-title {
+      font-size: 2rem;
+      color: #163d28;
+      margin: 8px 0 24px;
+      font-weight: 700;
+    }
+    .cert-subtitle {
+      color: #4b5563;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .cert-name {
+      font-size: 2.2rem;
+      color: #111827;
+      margin: 12px 0 8px;
+      font-weight: 700;
+    }
+    .cert-program {
+      color: #1f6b45;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+    .cert-body {
+      color: #374151;
+      line-height: 1.8;
+      max-width: 620px;
+      margin: 0 auto 32px;
+    }
+    .cert-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin: 28px 0 36px;
+    }
+    .cert-stat {
+      min-width: 120px;
+    }
+    .cert-stat strong {
+      display: block;
+      font-size: 1.4rem;
+      color: #163d28;
+    }
+    .cert-stat span {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+    .cert-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    .cert-footer small {
+      color: #6b7280;
+      display: block;
+      line-height: 1.5;
+    }
+    .cert-seal {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 3px solid #1f6b45;
+      color: #1f6b45;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0 auto 24px;
+      background: radial-gradient(circle at 30% 30%, #f0faf4, #fff);
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .cert-toolbar { display: none; }
+      .cert-page { box-shadow: none; width: 100%; min-height: 100vh; border-width: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="cert-toolbar">
+    <a href="<%= backPath %>" class="btn btn-secondary btn-sm">← Back</a>
+    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <div class="cert-page">
+    <div class="cert-brand">LSSTI BSCS Internship Portal</div>
+    <div class="cert-seal">Verified</div>
+    <h1 class="cert-title">Certificate of Completion</h1>
+    <p class="cert-subtitle">This certifies that the following student has successfully completed the required validated internship hours.</p>
+
+    <div class="cert-name"><%= report.student_name %></div>
+    <% if (report.course_program) { %>
+      <div class="cert-program"><%= report.course_program %></div>
+    <% } %>
+
+    <p class="cert-body">
+      Has fulfilled the internship hour requirement with validated on-the-job training records
+      recorded in the LSSTI BSCS Internship Portal.
+    </p>
+
+    <div class="cert-stats">
+      <div class="cert-stat">
+        <strong><%= Number(report.total_hours).toFixed(1) %></strong>
+        <span>Validated Hours</span>
+      </div>
+      <div class="cert-stat">
+        <strong><%= report.total_logs %></strong>
+        <span>Approved Reports</span>
+      </div>
+      <div class="cert-stat">
+        <strong><%= report.evaluation_score || '—' %></strong>
+        <span>Evaluation Score</span>
+      </div>
+    </div>
+
+    <div class="cert-footer">
+      <div>
+        <strong>Issued by</strong><br>
+        <small><%= report.generated_by_name %></small><br>
+        <small>Report #<%= report.id %></small>
+      </div>
+      <div style="text-align:right">
+        <strong>Date issued</strong><br>
+        <small><%= new Date(report.certificate_issued_at || report.generated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<div class="card full-width" style="margin-top:20px">
+  <div class="card-header">
+    <div>
+      <h2>Provide Feedback</h2>
+      <small>Available when a student completes required validated hours or is cleared — one feedback per day.</small>
+    </div>
+  </div>
+
+  <% if (!bscsGroup.students.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📝</div>
+      <p>No students available for feedback yet</p>
+    </div>
+  <% } else { %>
+    <div class="table-wrapper">
+      <table class="table feedback-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Validated Hours</th>
+            <th>Current Score</th>
+            <th>Clearance</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% bscsGroup.students.forEach(function(s) {
+            const todayFeedback = (typeof feedbackTodayByStudent !== 'undefined' && feedbackTodayByStudent[s.id]) ? feedbackTodayByStudent[s.id] : null;
+            const isCleared = (s.clearance_status || '') === 'cleared';
+            const hoursMet = Number(s.validated_hours) >= Number(s.required_hours);
+            const feedbackEligible = hoursMet || isCleared;
+            const remainingHours = Math.max(0, Number(s.required_hours) - Number(s.validated_hours));
+          %>
+            <tr>
+              <td>
+                <strong><%= s.name %></strong><br>
+                <small style="color:var(--gray-600)"><%= s.email %></small>
+              </td>
+              <td><%= s.validated_hours.toFixed(1) %> / <%= s.required_hours %> hrs</td>
+              <td><%= s.avg_score || '—' %></td>
+              <td><%- h.renderStatusBadge(s.clearance_status) %></td>
+              <td>
+                <% if (!feedbackEligible) { %>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    disabled
+                    title="<%= remainingHours.toFixed(1) %> hrs remaining before feedback is available"
+                  >Hours incomplete</button>
+                <% } else if (todayFeedback) { %>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    disabled
+                    title="Feedback submitted today — score: <%= todayFeedback.score %>. Available again tomorrow."
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+                    Done today
+                  </button>
+                <% } else { %>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    data-feedback-open
+                    data-student-id="<%= s.id %>"
+                    data-student-name="<%= s.name %>"
+                    data-student-program="<%= bscsGroup.program %>"
+                  >Give Feedback</button>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<div id="feedbackModal" class="feedback-modal hidden" aria-hidden="true">
+  <div class="feedback-modal-backdrop" data-feedback-modal-close></div>
+  <div class="feedback-modal-dialog" role="dialog" aria-labelledby="feedbackModalTitle" aria-modal="true">
+    <div class="feedback-modal-header">
+      <div>
+        <h3 id="feedbackModalTitle">Give Feedback</h3>
+        <p id="feedbackModalStudent"></p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-feedback-modal-close aria-label="Close">✕</button>
+    </div>
+    <form method="post" action="/supervisor/evaluate" id="feedbackModalForm" data-noConfirm>
+      <input type="hidden" name="student_id" id="feedbackStudentId" value="">
+      <div class="form-group">
+        <label for="feedbackScore">Score (0–100)</label>
+        <input type="number" id="feedbackScore" name="score" min="0" max="100" required placeholder="85">
+      </div>
+      <div class="form-group">
+        <label for="feedbackComments">Comments / Feedback</label>
+        <textarea id="feedbackComments" name="comments" rows="4" data-maxlength="1000" placeholder="Performance notes and recommendations..."></textarea>
+      </div>
+      <div class="feedback-modal-actions">
+        <button type="button" class="btn btn-cancel" data-feedback-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" data-loading-text="Submitting…">Submit Feedback</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="card full-width" id="all-accounts">
+  <div class="card-header">
+    <div>
+      <h2>All Accounts</h2>
+      <small>Click Type to sort by role.</small>
+    </div>
+  </div>
+  <% if (!users.length) { %>
+    <div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <p>No accounts found</p>
+    </div>
+  <% } else { %>
+    <div class="table-wrapper" data-search-label="accounts">
+      <table class="table supervisor-data-table" id="accountsTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Password</th>
+            <th><button type="button" class="table-sort-btn" id="sortByRole" data-sort="none" aria-pressed="false">Type <span class="table-sort-mark" aria-hidden="true"></span></button></th>
+            <th>Phone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function(u) { %>
+            <tr data-role="<%= u.role %>">
+              <td><strong><%= u.name %></strong></td>
+              <td><%= u.email %></td>
+              <td><%= u.password_visible || 'Not on file' %></td>
+              <td><%= h.roleLabel(u.role) %></td>
+              <td><%= u.phone || '—' %></td>
+              <td>
+                <div class="table-action-group">
+                  <a href="/supervisor/users?edit=<%= u.id %>" class="table-icon-btn" title="Edit account" aria-label="Edit account for <%= u.name %>">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                  </a>
+                  <% if (user.id !== u.id) { %>
+                    <form method="post" action="/supervisor/users/<%= u.id %>/delete" data-confirm="Delete <%= u.name %>? This cannot be undone." class="table-icon-form">
+                      <button type="submit" class="table-icon-btn table-icon-btn-danger" title="Delete account" aria-label="Delete <%= u.name %>">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                      </button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<script>
+document.getElementById('sortByRole')?.addEventListener('click', () => {
+  const button = document.getElementById('sortByRole');
+  const tbody = document.querySelector('#accountsTable tbody');
+  if (!button || !tbody) return;
+  const nextSort = button.dataset.sort === 'asc' ? 'desc' : 'asc';
+  button.dataset.sort = nextSort;
+  button.setAttribute('aria-pressed', 'true');
+  const descending = nextSort === 'desc';
+  const rows = Array.from(tbody.rows);
+  rows.sort((a, b) => {
+    const leftType = (a.cells[3]?.textContent || '').trim();
+    const rightType = (b.cells[3]?.textContent || '').trim();
+    const byType = leftType.localeCompare(rightType);
+    if (byType !== 0) return descending ? -byType : byType;
+    return (a.cells[0]?.textContent || '').localeCompare(b.cells[0]?.textContent || '');
+  });
+  rows.forEach((row) => tbody.appendChild(row));
+});
+</script>

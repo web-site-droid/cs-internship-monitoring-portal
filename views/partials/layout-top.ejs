@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle || 'Student Internship Monitoring Portal for LSSTI Programs' %></title>
+  <script src="/assets/js/theme.js"></script>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/notify.js" defer></script>
+  <script src="/assets/js/app.js" defer></script>
+  <script src="/assets/js/buttons.js" defer></script>
+  <script src="/assets/js/photo-viewer.js" defer></script>
+  <% if (typeof user !== 'undefined' && user) { %>
+  <script>
+    window.SESSION_IDLE_MS = <%= typeof sessionIdleMs !== 'undefined' ? sessionIdleMs : 3600000 %>;
+    window.SESSION_LOGOUT_URL = '/logout?reason=timeout';
+  </script>
+  <script src="/assets/js/session-timeout.js" defer></script>
+  <% } %>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo-mark">
+        <img src="/img/comsie-logo.png" alt="Department of Computer Science LSSTI" class="sidebar-logo">
+      </div>
+      <div class="brand-icon brand-icon-fallback">L</div>
+      <div class="sidebar-brand-text">
+        <strong>Student Internship Monitoring Portal</strong>
+        <span>for LSSTI Programs</span>
+      </div>
+    </div>
+    <% if (user) { %>
+    <nav class="sidebar-nav">
+      <% if (user.role === 'student') { %>
+        <a href="/student/dashboard" class="nav-link <%= activeNav === 'dashboard' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-home" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg></span><span class="nav-label">Dashboard</span></span>
+        </a>
+        <a href="/student/hours" class="nav-link <%= activeNav === 'hours' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-hours" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="nav-label">Hour Log History</span></span>
+        </a>
+        <a href="/student/reports" class="nav-link <%= activeNav === 'reports' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-docs" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span><span class="nav-label">Submit Reports</span></span>
+        </a>
+      <% } else if (user.role === 'supervisor' || user.role === 'admin') { %>
+        <a href="/supervisor/dashboard" class="nav-link <%= activeNav === 'dashboard' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-home" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg></span><span class="nav-label">Dashboard</span></span>
+        </a>
+        <a href="/supervisor/ojt-locations" class="nav-link <%= activeNav === 'ojt-locations' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-location" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="nav-label">OJT Site Locations</span></span>
+        </a>
+        <a href="/supervisor/daily-tasks" class="nav-link <%= activeNav === 'daily-tasks' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-tasks" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-label">Daily Tasks</span></span>
+        </a>
+        <a href="/supervisor/validate" class="nav-link <%= activeNav === 'validate' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-validate" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></span><span class="nav-label">Validate Activities</span></span>
+        </a>
+        <a href="/supervisor/reports" class="nav-link <%= activeNav === 'reports' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-chart" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><span class="nav-label">Clearance Reports</span></span>
+        </a>
+        <a href="/supervisor/attendance" class="nav-link <%= activeNav === 'attendance' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-hours" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span><span class="nav-label">Attendance</span></span>
+        </a>
+        <a href="/supervisor/users" class="nav-link <%= activeNav === 'users' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-docs" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label"><%= user.role === 'supervisor' ? 'Students' : 'Users' %></span></span>
+        </a>
+      <% } else if (user.role === 'school') { %>
+        <a href="/school/dashboard" class="nav-link <%= activeNav === 'dashboard' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-home" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg></span><span class="nav-label">Dashboard</span></span>
+        </a>
+        <a href="/school/validate" class="nav-link <%= activeNav === 'validate' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-hours" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="nav-label">Validate Hours</span></span>
+        </a>
+        <a href="/school/performance" class="nav-link <%= activeNav === 'performance' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-chart" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span><span class="nav-label">Performance Records</span></span>
+        </a>
+        <a href="/supervisor/attendance" class="nav-link <%= activeNav === 'attendance' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-hours" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span><span class="nav-label">Attendance</span></span>
+        </a>
+        <a href="/supervisor/ojt-locations" class="nav-link <%= activeNav === 'ojt-locations' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-location" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="nav-label">OJT Site Locations</span></span>
+        </a>
+        <a href="/school/reports" class="nav-link <%= activeNav === 'reports' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-chart" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><span class="nav-label">Clearance Reports</span></span>
+        </a>
+        <a href="/supervisor/users" class="nav-link <%= activeNav === 'users' ? 'active' : '' %>">
+          <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-docs" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">Users</span></span>
+        </a>
+      <% } %>
+      <a href="/profile" class="nav-link <%= activeNav === 'profile' ? 'active' : '' %>">
+        <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-profile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/></svg></span><span class="nav-label">Profile</span></span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/logout" class="nav-link logout-link sidebar-logout-link" title="Sign out" aria-label="Sign out">
+        <span class="nav-link-inner"><span class="nav-icon-wrap nav-icon-tone-logout" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span class="nav-label">Sign Out</span></span>
+      </a>
+    </div>
+    <% } %>
+  </aside>
+  <div class="main-content">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+      <div class="topbar-title">
+        <h1><%= pageHeading || 'Dashboard' %></h1>
+        <% if (typeof pageSubtitle !== 'undefined' && pageSubtitle) { %>
+          <p><%= pageSubtitle %></p>
+        <% } %>
+      </div>
+      <% if (user) {
+        const notifyHref = user.role === 'student' ? '/student/notifications'
+          : (user.role === 'supervisor' || user.role === 'admin') ? '/supervisor/notifications'
+          : '/school/notifications';
+        const notifyCount = notificationCount;
+        const msgHref = user.role === 'student' ? '/student/messages'
+          : (user.role === 'supervisor' || user.role === 'admin') ? '/supervisor/messages' : '/school/messages';
+        const notifyActive = (user.role === 'student' && activeNav === 'notifications')
+          || ((user.role === 'supervisor' || user.role === 'admin') && activeNav === 'notifications')
+          || (user.role === 'school' && activeNav === 'notifications');
+        const msgActive = activeNav === 'messages';
+      %>
+      <div class="topbar-actions">
+        <div class="theme-toggle" role="group" aria-label="Color theme">
+          <button type="button" class="theme-toggle-btn theme-toggle-light" data-theme-set="light" title="Light mode" aria-label="Light mode" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </button>
+          <button type="button" class="theme-toggle-btn theme-toggle-dark" data-theme-set="dark" title="Dark mode" aria-label="Dark mode" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+        </div>
+        <a href="<%= notifyHref %>" class="topbar-icon-btn topbar-icon-btn-notify <%= notifyActive ? 'active' : '' %>" title="Notifications" aria-label="Notifications">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <% if (notifyCount > 0) { %><span class="topbar-icon-badge"><%= notifyCount %></span><% } %>
+        </a>
+        <a href="<%= msgHref %>" class="topbar-icon-btn topbar-icon-btn-messages <%= msgActive ? 'active' : '' %>" title="Messages" aria-label="Messages">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <% if (unreadCount > 0) { %><span class="topbar-icon-badge"><%= unreadCount %></span><% } %>
+        </a>
+      </div>
+      <% } %>
+    </header>
+    <main class="page-content">
+      <%- include('flash') %>

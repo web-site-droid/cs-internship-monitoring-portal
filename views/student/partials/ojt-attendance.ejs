@@ -1,0 +1,301 @@
+<%
+  const ctx = (typeof ojt !== 'undefined' && ojt) ? ojt : {};
+  const attendanceLocked = Boolean(ctx.attendanceLocked);
+  const ojtSite = ctx.ojtSite || null;
+  const today = ctx.today || '';
+  const todayTimeIn = ctx.todayTimeIn || ctx.activeSession || null;
+  const todaySessions = Array.isArray(ctx.todaySessions) ? ctx.todaySessions : [];
+  const completedTodaySessions = todaySessions.filter(function(s) { return s.time_out_at; });
+  const todayHoursTotal = todaySessions.reduce(function(sum, s) {
+    return sum + Number(s.auto_hours || 0);
+  }, 0);
+  const ojtHistory = Array.isArray(ctx.ojtHistory) ? ctx.ojtHistory : [];
+  const todayTasks = Array.isArray(ctx.todayTasks) ? ctx.todayTasks : [];
+  const progressStatus = ctx.progressStatus || { ready: false, message: '' };
+  const progressReady = Boolean(ctx.progressReady);
+  const ojtTestBypass = Boolean(ctx.ojtTestBypass);
+%>
+<div class="card full-width ojt-timein-card">
+  <div class="card-header">
+    <div>
+      <h2>OJT Attendance</h2>
+      <small>Time in and time out at your OJT site — hours are counted automatically. After you time out (e.g. lunch), you can time in again the same day.</small>
+    </div>
+  </div>
+
+  <% if (!ojtSite && !attendanceLocked) { %>
+    <div class="empty-state" style="padding:20px">
+      <div class="empty-icon">📍</div>
+      <p>Your OJT location is not set yet</p>
+      <small>Ask your administrator to configure your internship site on OJT Site Locations.</small>
+    </div>
+  <% } else if (attendanceLocked) { %>
+    <div class="ojt-attendance-complete">
+      <div class="ojt-attendance-complete-badge">
+        <span class="status-badge status-approved">Cleared</span>
+      </div>
+      <p><strong>Internship hours complete.</strong> You reached your required validated hours — attendance is closed and will not accept new time-in or time-out.</p>
+      <small>Your clearance status is permanently set to <strong>Cleared</strong>.</small>
+    </div>
+  <% } else {
+    const mapLat = Number(ojtSite.latitude);
+    const mapLng = Number(ojtSite.longitude);
+    const mapCoords = mapLat.toFixed(7) + ',' + mapLng.toFixed(7);
+    const mapCoordsLabel = mapLat.toFixed(7) + ', ' + mapLng.toFixed(7);
+    const mapsKey = typeof googleMapsApiKey !== 'undefined' ? googleMapsApiKey : '';
+    let mapEmbedUrl = '';
+    let mapDirectionsUrl = '#';
+    if (Number.isFinite(mapLat) && Number.isFinite(mapLng)) {
+      if (mapsKey) {
+        mapEmbedUrl = 'https://www.google.com/maps/embed/v1/place?key=' + encodeURIComponent(mapsKey)
+          + '&q=' + encodeURIComponent(mapCoords) + '&zoom=17&maptype=roadmap';
+      } else {
+        mapEmbedUrl = 'https://maps.google.com/maps?q=' + encodeURIComponent(mapCoords)
+          + '&ll=' + encodeURIComponent(mapCoords) + '&z=17&hl=en&output=embed';
+      }
+      mapDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(mapCoords);
+    }
+  %>
+    <% if (ojtTestBypass) { %>
+      <div class="alert alert-warning" style="margin-bottom:12px">
+        <strong>Test mode:</strong> Geofence bypass is on for local testing.
+      </div>
+    <% } %>
+
+    <div class="ojt-site-map-wrap">
+      <div class="ojt-site-map">
+        <iframe
+          class="ojt-site-map-frame"
+          title="OJT site map — <%= ojtSite.name %>"
+          src="<%= mapEmbedUrl %>"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+        <a href="<%= mapDirectionsUrl %>" class="ojt-map-directions-btn" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 19l14-7L5 5v6l8 1-8 1v6z"/></svg>
+          Get directions
+        </a>
+      </div>
+      <p class="ojt-site-meta"><strong>OJT Site:</strong> <%= ojtSite.name %> · <%= mapCoordsLabel %> · within <strong><%= ojtSite.radius_meters %> m</strong></p>
+    </div>
+
+    <% if (completedTodaySessions.length) { %>
+      <div class="table-wrapper" style="margin-bottom:14px">
+        <table class="table ojt-attendance-table">
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>Time In</th>
+              <th>Time Out</th>
+              <th>Hours</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% completedTodaySessions.forEach(function(record, idx) { %>
+              <tr>
+                <td>Today #<%= idx + 1 %></td>
+                <td><%= record.time_in_at ? h.formatTime(record.time_in_at) : '—' %></td>
+                <td><%= record.time_out_at ? h.formatTime(record.time_out_at) : '—' %></td>
+                <td><%= Number(record.auto_hours || 0).toFixed(2) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <div class="table-wrapper">
+      <table class="table ojt-attendance-table">
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Capture</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="ojtTimeInPanel" data-site-name="<%= ojtSite.name %>" data-radius="<%= ojtSite.radius_meters %>">
+            <td><strong><%= todayTimeIn ? 'Current Time In' : 'Time In' %></strong></td>
+            <td><%= todayTimeIn && todayTimeIn.time_in_at ? h.formatTime(todayTimeIn.time_in_at) : '—' %></td>
+            <td>
+              <% if (todayTimeIn && todayTimeIn.within_geofence) { %>
+                <span class="status-badge status-approved">Active</span>
+              <% } else { %>
+                <span class="status-badge status-pending">Pending</span>
+                <p id="ojtTimeInStatus" class="field-hint ojt-row-status">Click Time In — camera opens only when you are at <%= ojtSite.name %>.</p>
+                <button type="button" class="btn btn-secondary btn-sm" id="ojtRefreshLocationBtn" hidden>Check location</button>
+              <% } %>
+            </td>
+            <td class="ojt-capture-cell">
+              <% if (todayTimeIn && todayTimeIn.time_in_photo) { %>
+                <button type="button" class="view-photo-btn ojt-view-photo-btn" data-photo-url="<%= todayTimeIn.time_in_photo %>" data-photo-title="Attendance Photo" data-photo-label="Time In — <%= h.formatDate(today) %>">View Photo</button>
+              <% } else if (!(todayTimeIn && todayTimeIn.within_geofence)) { %>
+                <button type="button" class="btn btn-primary btn-sm ojt-start-capture-btn" id="ojtTimeInStartBtn">Time In</button>
+                <div class="ojt-capture-flow hidden" id="ojtTimeInCaptureFlow">
+                  <div class="ojt-capture-box">
+                    <div id="ojtCameraSection" class="ojt-camera-section inactive" aria-hidden="true">
+                      <div class="ojt-camera-lock">
+                        <span class="ojt-camera-lock-icon">📷</span>
+                        <p>At OJT site</p>
+                      </div>
+                      <div class="ojt-camera-active">
+                        <video id="ojtCameraPreview" autoplay playsinline muted></video>
+                        <canvas id="ojtCameraCanvas" class="hidden"></canvas>
+                        <img id="ojtCapturedPreview" class="ojt-captured-preview hidden" alt="Captured time-in photo">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ojt-camera-actions">
+                    <button type="button" class="btn btn-primary btn-sm" id="ojtCaptureBtn" disabled>Capture & Time In</button>
+                    <button type="button" class="btn btn-secondary btn-sm hidden" id="ojtRetakeBtn">Retake</button>
+                  </div>
+                </div>
+              <% } else { %>
+                <span class="status-badge status-approved">Done</span>
+              <% } %>
+            </td>
+          </tr>
+
+          <tr id="ojtTimeOutPanel" data-site-name="<%= ojtSite.name %>" data-radius="<%= ojtSite.radius_meters %>" data-progress-ready="<%= progressReady ? 'true' : 'false' %>">
+            <td><strong>Time Out</strong></td>
+            <td><%= todayTimeIn && todayTimeIn.time_out_at ? h.formatTime(todayTimeIn.time_out_at) : '—' %></td>
+            <td>
+              <% if (todayTimeIn && todayTimeIn.time_out_at) { %>
+                <span class="status-badge status-approved">Done</span>
+              <% } else if (todayTimeIn && todayTimeIn.within_geofence) { %>
+                <% if (!progressReady) { %>
+                  <span class="status-badge status-pending">Locked</span>
+                  <details class="ojt-row-details">
+                    <summary>View details</summary>
+                    <p class="field-hint"><%= progressStatus.message || 'Complete tasks on Submit Reports first.' %></p>
+                  </details>
+                <% } else { %>
+                  <span class="status-badge status-pending">Ready</span>
+                  <p id="ojtTimeOutStatus" class="field-hint ojt-row-status">Click Time Out to open the camera.</p>
+                  <button type="button" class="btn btn-secondary btn-sm" id="ojtTimeOutRefreshBtn" hidden>Refresh Location</button>
+                <% } %>
+              <% } else { %>
+                <span class="status-badge status-pending">Waiting</span>
+                <details class="ojt-row-details">
+                  <summary>View details</summary>
+                  <p class="field-hint">Time in first</p>
+                </details>
+              <% } %>
+            </td>
+            <td class="ojt-capture-cell">
+              <% if (todayTimeIn && todayTimeIn.time_out_photo) { %>
+                <button type="button" class="view-photo-btn ojt-view-photo-btn" data-photo-url="<%= todayTimeIn.time_out_photo %>" data-photo-title="Attendance Photo" data-photo-label="Time Out — <%= h.formatDate(today) %>">View Photo</button>
+              <% } else if (todayTimeIn && todayTimeIn.within_geofence && !todayTimeIn.time_out_at) { %>
+                <% if (!progressReady) { %>
+                  <span class="status-badge status-pending">Locked</span>
+                <% } else { %>
+                  <button type="button" class="btn btn-primary btn-sm ojt-start-capture-btn" id="ojtTimeOutStartBtn">Time Out</button>
+                  <div class="ojt-capture-flow hidden" id="ojtTimeOutCaptureFlow">
+                    <div class="ojt-capture-box">
+                      <div id="ojtTimeOutCameraSection" class="ojt-camera-section inactive" aria-hidden="true">
+                        <div class="ojt-camera-lock">
+                          <span class="ojt-camera-lock-icon">📷</span>
+                          <p>At OJT site</p>
+                        </div>
+                        <div class="ojt-camera-active">
+                          <video id="ojtTimeOutPreview" autoplay playsinline muted></video>
+                          <canvas id="ojtTimeOutCanvas" class="hidden"></canvas>
+                          <img id="ojtTimeOutCapturedPreview" class="ojt-captured-preview hidden" alt="Captured time-out photo">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="ojt-camera-actions">
+                      <button type="button" class="btn btn-primary btn-sm" id="ojtTimeOutCaptureBtn" disabled>Capture & Time Out</button>
+                      <button type="button" class="btn btn-secondary btn-sm hidden" id="ojtTimeOutRetakeBtn">Retake</button>
+                    </div>
+                  </div>
+                <% } %>
+              <% } else { %>
+                <span class="status-badge status-pending">Waiting</span>
+              <% } %>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (typeof ojtHistory !== 'undefined' && ojtHistory.length) { %>
+      <details class="ojt-attendance-more">
+        <summary>View past attendance (<%= ojtHistory.length %>)</summary>
+        <div class="table-wrapper" style="margin-top:12px">
+          <table class="table ojt-attendance-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Hours</th>
+                <th>Photos</th>
+              </tr>
+            </thead>
+            <tbody>
+            <% ojtHistory.forEach(function(record) { %>
+              <tr>
+                <td><%= h.formatDate(record.time_in_date) %></td>
+                <td><%= record.time_in_at ? h.formatTime(record.time_in_at) : '—' %></td>
+                <td><%= record.time_out_at ? h.formatTime(record.time_out_at) : '—' %></td>
+                <td><%= Number(record.auto_hours || 0).toFixed(2) %></td>
+                <td class="ojt-capture-cell ojt-capture-cell-compact">
+                  <% if (record.time_in_photo) { %>
+                    <button type="button" class="view-photo-btn ojt-view-photo-btn" data-photo-url="<%= record.time_in_photo %>" data-photo-title="Attendance Photo" data-photo-label="Time In — <%= h.formatDate(record.time_in_date) %>">View In</button>
+                  <% } %>
+                  <% if (record.time_out_photo) { %>
+                    <button type="button" class="view-photo-btn ojt-view-photo-btn" data-photo-url="<%= record.time_out_photo %>" data-photo-title="Attendance Photo" data-photo-label="Time Out — <%= h.formatDate(record.time_in_date) %>">View Out</button>
+                  <% } %>
+                  <% if (!record.time_in_photo && !record.time_out_photo) { %>—<% } %>
+                </td>
+              </tr>
+            <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    <% } %>
+
+    <% if (todayHoursTotal > 0 && !todayTimeIn) { %>
+      <p class="ojt-day-summary">
+        <strong><%= todayHoursTotal.toFixed(2) %> hrs</strong> auto-logged today so far
+        · <%= ojtSite.name %>
+      </p>
+    <% } else if (todayTimeIn && todayTimeIn.within_geofence) { %>
+      <% if (todayTasks.length) {
+        const pendingTasks = todayTasks.filter(function(t) {
+          return !(t.student_progress && String(t.student_progress).trim().length >= 10 && t.proof_photo);
+        });
+      %>
+        <% if (pendingTasks.length) { %>
+          <div class="ojt-task-reminder">
+            <strong><%= pendingTasks.length %> task<%= pendingTasks.length === 1 ? '' : 's' %> pending</strong>
+            <p>Submit on <a href="/student/reports">Submit Reports</a> before timing out.</p>
+          </div>
+        <% } else { %>
+          <p class="field-hint" style="margin-top:12px">All assigned tasks submitted for today.</p>
+        <% } %>
+      <% } %>
+      <% if (progressReady) { %>
+        <p class="field-hint ojt-progress-hint is-ready">All requirements met — you may time out.</p>
+      <% } %>
+    <% } %>
+  <% } %>
+</div>
+
+<script>
+  window.OJT_SITE = <%- JSON.stringify(ojtSite || null) %>;
+  window.OJT_TEST_BYPASS = <%= ojtTestBypass ? 'true' : 'false' %>;
+  window.OJT_TIME_IN = <%- JSON.stringify(todayTimeIn ? {
+    within_geofence: todayTimeIn.within_geofence,
+    distance_meters: todayTimeIn.distance_meters,
+    time_out_at: todayTimeIn.time_out_at || null,
+    auto_hours: todayTimeIn.auto_hours || null
+  } : null) %>;
+  window.OJT_PROGRESS_READY = <%= progressReady ? 'true' : 'false' %>;
+</script>
+<script src="/assets/js/ojt-timeout.js" defer></script>
+<script src="/assets/js/ojt-timein.js" defer></script>
