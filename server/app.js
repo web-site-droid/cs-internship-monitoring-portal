@@ -64,11 +64,14 @@ app.use((req, res, next) => {
 
 app.use(async (req, res, next) => {
   try {
-    await ensureDatabaseReady();
+    await Promise.race([
+      ensureDatabaseReady(),
+      new Promise((resolve) => setTimeout(resolve, 4000)),
+    ]);
     next();
   } catch (err) {
     console.error('Database bootstrap failed:', err.message);
-    next(err);
+    next();
   }
 });
 

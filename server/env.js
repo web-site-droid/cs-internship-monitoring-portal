@@ -38,10 +38,30 @@ function getRequiredEnvErrors() {
   return errors;
 }
 
+function databaseUrlForRuntime() {
+  const raw = process.env.DATABASE_URL || '';
+  if (!isVercel() || !raw) return raw;
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return raw;
+  }
+  const match = parsed.hostname.match(/^db\.([a-z0-9]+)\.supabase\.co$/i);
+  if (!match) return raw;
+  const ref = match[1];
+  const region = process.env.SUPABASE_REGION || 'ap-south-1';
+  const user = decodeURIComponent(parsed.username || 'postgres');
+  if (!user.includes('.')) parsed.username = `${user}.${ref}`;
+  parsed.hostname = `aws-0-${region}.pooler.supabase.com`;
+  parsed.port = '5432';
+  return parsed.toString();
+}
+
 function getPgPoolConfig() {
   const onVercel = isVercel();
   return {
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrlForRuntime(),
     ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false },
     connectionTimeoutMillis: Number(process.env.PG_CONNECT_TIMEOUT_MS || 5000),
     idleTimeoutMillis: 30000,

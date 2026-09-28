@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const pool = require('./db');
-const { getPgPoolConfig } = require('./env');
+const { getPgPoolConfig, isVercel } = require('./env');
 
 let bootstrapPromise = null;
 let bootstrapComplete = false;
@@ -60,7 +60,8 @@ async function bootstrapDatabase() {
 }
 
 function ensureDatabaseReady() {
-  if (bootstrapComplete || process.env.SKIP_DB_BOOTSTRAP === 'true') {
+  const skip = isVercel() || String(process.env.SKIP_DB_BOOTSTRAP || '').toLowerCase() === 'true';
+  if (bootstrapComplete || skip) {
     bootstrapComplete = true;
     return Promise.resolve();
   }
