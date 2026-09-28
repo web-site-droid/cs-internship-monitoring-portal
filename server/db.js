@@ -41,14 +41,29 @@ if (isVercel() && !isPostgres) {
   };
 } else if (isPostgres) {
   const { Pool } = require('pg');
-  const pgPool = new Pool(getPgPoolConfig());
+  let pgPool;
+  try {
+    pgPool = new Pool(getPgPoolConfig());
+  } catch (err) {
+    console.error('Postgres pool was not created:', err.message);
+    pgPool = null;
+  }
 
-  pgPool.query('SELECT 1').catch(() => {});
+  if (pgPool) {
+    pgPool.on('error', (err) => {
+      console.error('Postgres pool error:', err.message);
+    });
+  }
+
+  async function runPg(sql, params) {
+    if (!pgPool) throw new Error('Database connection is not configured.');
+    return pgPool.query(sql, params);
+  }
 
   pool = {
     isPostgres: true,
     query: async (sql, params = []) => {
-      const result = await pgPool.query(convertPlaceholders(sql), params);
+      const result = await runPg(convertPlaceholders(sql), params);
       return [result.rows, result.fields || []];
     },
     execute: async (sql, params = []) => {
@@ -57,11 +72,11 @@ if (isVercel() && !isPostgres) {
         querySql = `${querySql.trim().replace(/;?\s*$/, '')} RETURNING id`;
       }
       try {
-        const result = await pgPool.query(querySql, params);
+        const result = await runPg(querySql, params);
         return wrapPgResult(result);
       } catch (err) {
         if (err.code === '42703' && /RETURNING id/i.test(querySql)) {
-          const fallback = await pgPool.query(convertPlaceholders(sql), params);
+          const fallback = await runPg(convertPlaceholders(sql), params);
           return wrapPgResult(fallback);
         }
         throw err;

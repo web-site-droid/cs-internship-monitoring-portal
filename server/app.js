@@ -60,13 +60,23 @@ function roleHome(role) {
 }
 
 app.get(['/', '/login'], (req, res) => {
+  const configErrors = getRequiredEnvErrors();
+  if (configErrors.length) {
+    return res.status(503).type('html').send(renderConfigErrorHtml(configErrors));
+  }
   attachUser(req, res, () => {
     if (req.user) return res.redirect(roleHome(req.user.role));
     res.locals.user = null;
     res.locals.flash = getFlash(req, res);
     res.locals.h = viewHelpers;
     res.locals.googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
-    res.render('index', { openSignin: req.path === '/login' });
+    res.render('index', { openSignin: req.path === '/login' }, (err, html) => {
+      if (err) {
+        console.error('Landing render failed:', err);
+        return res.status(500).type('html').send('<h1>The portal page could not be loaded.</h1><p>Upload the views folder, then redeploy.</p>');
+      }
+      res.send(html);
+    });
   });
 });
 
